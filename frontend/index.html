@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Distributed Tracing UI</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #2c3e50;
+    }
+
+    .card {
+      background: white;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    button {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #2980b9;
+    }
+
+    #graph {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 15px;
+      overflow-x: auto;
+      position: relative;
+    }
+
+    .bar {
+      height: 32px;
+      border-radius: 6px;
+      color: white;
+      display: flex;
+      align-items: center;
+      padding-left: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+      position: relative;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Traces</h1>
+<div id="traces"></div>
+
+<h2>Trace Detail (Timeline View)</h2>
+<div id="graph" data-testid="flame-graph-container"></div>
+
+<script>
+
+function getColor(service) {
+  if (service === "gateway") return "#2980b9";
+  if (service === "service-a") return "#27ae60";
+  if (service === "service-b") return "#f39c12";
+  return "#7f8c8d";
+}
+
+async function load() {
+  const res = await fetch("http://localhost:4000/api/traces");
+  const data = await res.json();
+
+  const container = document.getElementById("traces");
+  container.innerHTML = "";
+
+  data.forEach(t => {
+    const div = document.createElement("div");
+    div.className = "card";
+
+    div.innerHTML = `
+      <button data-testid="trace-list-item-${t.traceId}"
+        onclick="loadTrace('${t.traceId}')">
+        ${t.traceId}
+      </button><br>
+      Duration: ${t.durationMs} ms<br>
+      Services: ${t.services.join(", ")}
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+
+async function loadTrace(traceId) {
+  const res = await fetch("http://localhost:4000/api/traces/" + traceId);
+  const spans = await res.json();
+
+  const container = document.getElementById("graph");
+  container.innerHTML = "";
+
+  if (!spans || spans.length === 0) {
+    container.innerHTML = "No spans found";
+    return;
+  }
+
+  
+  spans.sort((a, b) =>
+    new Date(a.startTime) - new Date(b.startTime)
+  );
+
+
+  const minStart = Math.min(
+    ...spans.map(s => new Date(s.startTime).getTime())
+  );
+
+  const scale = 2; // adjust zoom (lower = bigger bars)
+
+  spans.forEach(span => {
+    const start = new Date(span.startTime).getTime();
+
+    const offset = (start - minStart) / scale;
+    const width = Math.max(span.durationMs / scale, 40);
+
+    const bar = document.createElement("div");
+    bar.className = "bar";
+
+ 
+    bar.setAttribute("data-testid", `span-bar-${span.spanId}`);
+
+    bar.style.marginLeft = offset + "px";
+    bar.style.width = width + "px";
+
+    bar.style.background =
+      span.status === "error"
+        ? "#e74c3c"
+        : getColor(span.serviceName);
+
+    bar.innerText =
+      span.serviceName + " (" + span.durationMs + " ms)";
+
+    container.appendChild(bar);
+  });
+}
+
+load();
+
+</script>
+
+</body>
+</html>

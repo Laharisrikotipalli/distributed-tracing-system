@@ -1,0 +1,61 @@
+services:
+
+  gateway:
+    build: ./gateway
+    ports:
+      - "3005:3000"
+    depends_on:
+      - service-a
+      - service-b
+      - collector
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  service-a:
+    build: ./service-a
+    ports:
+      - "3001:3001"
+    depends_on:
+      - collector
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  service-b:
+    build: ./service-b
+    ports:
+      - "3002:3002"
+    depends_on:
+      - collector
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/metrics"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  collector:
+    build: ./collector
+    ports:
+      - "4000:4000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5000:5000"
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml

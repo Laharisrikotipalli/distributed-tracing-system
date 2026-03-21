@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+
+<html>
+<body>
+
+<h2>Trace Detail</h2>
+
+<div id="graph"></div>
+
+<script>
+
+const urlParams = new URLSearchParams(window.location.search);
+const traceId = urlParams.get("id");
+
+console.log("Trace ID:", traceId);
+
+if (!traceId) {
+  document.body.innerHTML = "❌ No trace ID provided";
+  throw new Error("Missing traceId");
+}
+
+async function loadTrace() {
+  const res = await fetch("http://localhost:4000/api/traces/" + traceId);
+  const spans = await res.json();
+
+  const container = document.getElementById("graph");
+
+  spans.forEach(span => {
+    const bar = document.createElement("div");
+
+    bar.style.margin = "5px";
+    bar.style.padding = "5px";
+    bar.style.width = span.durationMs + "px";
+    bar.style.color = "white";
+    bar.style.background =
+      span.status === "error" ? "red" : "green";
+
+    bar.innerText =
+      span.serviceName + " (" + span.durationMs + " ms)";
+
+    container.appendChild(bar);
+  });
+}
+
+loadTrace();
+
+</script>
+
+</body>
+</html>
