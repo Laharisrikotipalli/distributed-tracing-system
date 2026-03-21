@@ -16,7 +16,7 @@ The system includes:
 ---
 
 ## Architecture Diagram
-
+```
                 ┌──────────────┐
                 │   Frontend   │
                 │ (Port 5000)  │
@@ -46,7 +46,7 @@ The system includes:
               │ Prometheus   │
               │ (Port 9090)  │
               └──────────────┘
-
+```
 ---
 
 ## Features
