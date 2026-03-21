@@ -93,11 +93,11 @@ POST /work
 ---
 
 ### Collector
-
+```
 POST /api/spans
 GET  /api/traces
 GET  /api/traces/{traceId}
-
+```
 ---
 
 ### Metrics
