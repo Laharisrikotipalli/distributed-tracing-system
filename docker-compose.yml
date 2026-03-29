@@ -1,52 +1,40 @@
 services:
-
   gateway:
     build: ./gateway
     ports:
-      - "3005:3000"
+      - "3010:3000" 
+    environment:
+      - SERVICE_A_URL=http://service-a:3001/work
+      - SERVICE_B_URL=http://service-b:3001/work # Now points to 3001
     depends_on:
       - service-a
       - service-b
       - collector
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   service-a:
     build: ./service-a
     ports:
       - "3001:3001"
+    environment:
+      - SERVICE_NAME=service-a
+      - PORT=3001 
     depends_on:
       - collector
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3001/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   service-b:
     build: ./service-b
     ports:
-      - "3002:3002"
+      - "3002:3001" # Host 3002 maps to Container 3001
+    environment:
+      - SERVICE_NAME=service-b
+      - PORT=3001   # Internal port is now 3001
     depends_on:
       - collector
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3002/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   collector:
     build: ./collector
     ports:
       - "4000:4000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
   frontend:
     build: ./frontend
