@@ -1,22 +1,27 @@
-# Distributed Tracing System (Microservices + Prometheus)
+Distributed Tracing System (Microservices + Prometheus)
 
-## Overview
+Overview
 
-This project implements a Distributed Tracing System using microservices architecture. It demonstrates how a request flows across multiple services (Gateway → Service A → Service B) while capturing and visualizing trace data.
+This project implements a Distributed Tracing System using a microservices architecture. It demonstrates how a request flows across multiple services:
 
-The system includes:
+Gateway → Service A → Service B
+
+while capturing and visualizing trace data.
+
+Components
 
 - API Gateway (entry point)
 - Service A (fast processing)
-- Service B (slow + failure simulation)
+- Service B (slow processing with failure simulation)
 - Span Collector (stores traces)
-- Frontend UI (Jaeger-like timeline)
+- Frontend UI (timeline visualization)
 - Prometheus (metrics monitoring)
 
 ---
 
-## Architecture Diagram
+Architecture Diagram
 ```
+
                 ┌──────────────┐
                 │   Frontend   │
                 │ (Port 5000)  │
@@ -25,7 +30,7 @@ The system includes:
                        ▼
                 ┌──────────────┐
                 │   Gateway    │
-                │ (Port 3000)  │
+                │ (Port 3005)  │
                 └──────┬───────┘
                        │
         ┌──────────────┴──────────────┐
@@ -49,58 +54,63 @@ The system includes:
 ```
 ---
 
-## Features
+Features
 
- Distributed tracing using W3C traceparent header
- Parallel service calls (Service A & B)
- Error simulation (Service B fails randomly)
- Span collection & storage
- Trace visualization (timeline / flame graph)
- Prometheus metrics ("/metrics")
- Docker-based orchestration
- Health checks for all services
+- Distributed tracing using W3C traceparent header
+- Parallel service calls (Service A and Service B)
+- Error simulation in Service B
+- Span collection and storage
+- Trace visualization (timeline view)
+- Prometheus metrics (/metrics)
+- Docker-based orchestration
+- Health monitoring
 
 ---
 
-## API Endpoints
+API Endpoints
 
-### Gateway
+Gateway
 
 POST /api/go
 
 - Starts a new trace
-- Calls Service A & B
-- Returns "{ "status": "ok" }"
+- Calls Service A and Service B
+- Returns:
+
+{
+  "status": "ok",
+  "traceId": "<trace-id>"
+}
 
 ---
 
-### Service A
+Service A
 
 POST /work
 
 - Delay: 50–200 ms
-- Always success
+- Always successful
 
 ---
 
-### Service B
+Service B
 
 POST /work
 
 - Delay: 100–500 ms
-- 20% failure rate
+- Random failure (20–50%)
 
 ---
 
-### Collector
-```
+Collector
+
 POST /api/spans
 GET  /api/traces
 GET  /api/traces/{traceId}
-```
+
 ---
 
-### Metrics
+Metrics
 
 GET /metrics
 
@@ -110,86 +120,80 @@ Available on:
 - Service A
 - Service B
 
----
-
-### Example Metrics
+Example
 
 http_requests_total{service="gateway",method="POST",path="/api/go",status="200"} 5
-
 http_request_duration_seconds_bucket{service="gateway",le="0.5"} 3
 
 ---
 
-### Frontend Features
+Frontend Features
 
 - Trace list view
 - Clickable trace IDs
 - Timeline visualization
-- Error spans shown in red
-- data-testid attributes for testing
+- Error spans highlighted
+- Real-time updates
 
 ---
 
-## Running the Project
+Running the Project
 
-1️ Clone repository
-```
+1. Clone Repository
+
 git clone <your-repo-url>
-```
-```
 cd distributed-tracing-system
-```
 
 ---
 
-2️ Start services
-```
+2. Start Services
+
 docker compose up --build
-```
+
 ---
 
-3️ Access applications
-```
-Service| URL
-Frontend| http://localhost:5000
-Gateway| http://localhost:3005
-Collector| http://localhost:4000
-Prometheus| http://localhost:9090
-```
+3. Access Applications
+
+Service | URL
+Frontend | http://localhost:5000
+Gateway | http://localhost:3005
+Collector | http://localhost:4000
+Prometheus | http://localhost:9090
+
 ---
 
-### Testing
+Testing
 
-Generate trace
-```
+Generate Trace
+
 curl -X POST http://localhost:3005/api/go
-```
+
 ---
 
-Get traces
-```
+Get Traces
+
 curl http://localhost:4000/api/traces
-```
+
 ---
 
 Metrics
-```
+
 curl http://localhost:3005/metrics
-```
+
 ---
 
-## Traceparent Format
+Traceparent Format
 
 00-{traceId}-{spanId}-01
 
 Example:
-```
+
 00-abc123def4567890-xyz987654321-01
-```
+
 ---
 
-## Project Structure
-```
+Project Structure
+
 distributed-tracing-system/
 │
 ├── gateway/
@@ -202,14 +206,14 @@ distributed-tracing-system/
 ├── prometheus.yml
 ├── .env.example
 └── README.md
-```
 
 ---
 
-## Conclusion
+Conclusion
 
 This project demonstrates a complete distributed tracing system with:
 
-- Observability
-- Monitoring
-- Visualization
+- Observability across microservices
+- Performance monitoring
+- Error tracking and debugging
+- Visualization of request flow
