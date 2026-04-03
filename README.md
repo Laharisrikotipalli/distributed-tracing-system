@@ -162,7 +162,7 @@ Prometheus| http://localhost:9090
 
 Generate trace
 ```
-curl -X POST http://localhost:3005/api/go
+curl -X POST http://localhost:3010/api/go
 ```
 ---
 
@@ -174,7 +174,7 @@ curl http://localhost:4000/api/traces
 
 Metrics
 ```
-curl http://localhost:3005/metrics
+curl http://localhost:3010/metrics
 ```
 ---
 
