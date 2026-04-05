@@ -1,10 +1,18 @@
 const express = require("express");
 const axios = require("axios");
+const client = require("prom-client");
 
 const app = express();
 app.use(express.json());
 
 const PORT = 3002;
+
+client.collectDefaultMetrics();
+
+app.get("/metrics", async (req, res) => {
+  res.set("Content-Type", client.register.contentType);
+  res.end(await client.register.metrics());
+});
 
 function generateId(len = 16) {
   return [...Array(len)]
@@ -31,7 +39,7 @@ app.post("/work", async (req, res) => {
   let status = "ok";
   let errorDetails = null;
 
-  if (Math.random() < 0.5) {
+  if (Math.random() < 0.2) {
     status = "error";
     errorDetails = "Random failure in service B";
   }
@@ -47,7 +55,7 @@ app.post("/work", async (req, res) => {
     durationMs: duration,
     status,
     errorDetails
-  });
+  }).catch(() => {});
 
   if (status === "error") {
     return res.status(500).json({ error: "failed" });
