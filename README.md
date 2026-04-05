@@ -1,64 +1,60 @@
-# Distributed Tracing System (Microservices + Prometheus)
+# Distributed Tracing System
+
+Microservices + Prometheus + Observability
+
+---
 
 ## Overview
 
-This project implements a Distributed Tracing System using microservices architecture. It demonstrates how a request flows across multiple services (Gateway → Service A → Service B) while capturing and visualizing trace data.
+This project implements a **Distributed Tracing System** using a microservices architecture. It demonstrates how a request flows across multiple services while capturing, storing, and visualizing trace data.
 
-The system includes:
-
-- API Gateway (entry point)
-- Service A (fast processing)
-- Service B (slow + failure simulation)
-- Span Collector (stores traces)
-- Frontend UI (Jaeger-like timeline)
-- Prometheus (metrics monitoring)
+The system simulates real-world observability using tracing, monitoring, and visualization tools.
 
 ---
 
-## Architecture Diagram
-```
-                ┌──────────────┐
-                │   Frontend   │
-                │ (Port 5000)  │
-                └──────┬───────┘
-                       │
-                       ▼
-                ┌──────────────┐
-                │   Gateway    │
-                │ (Port 3000)  │
-                └──────┬───────┘
-                       │
-        ┌──────────────┴──────────────┐
-        ▼                             ▼
-┌──────────────┐              ┌──────────────┐
-│  Service A   │              │  Service B   │
-│ (Port 3001)  │              │ (Port 3002)  │
-└──────┬───────┘              └──────┬───────┘
-       │                              │
-       └──────────────┬───────────────┘
-                      ▼
-              ┌──────────────┐
-              │  Collector   │
-              │ (Port 4000)  │
-              └──────┬───────┘
-                     ▼
-              ┌──────────────┐
-              │ Prometheus   │
-              │ (Port 9090)  │
-              └──────────────┘
-```
+## System Components
+
+* API Gateway – Entry point for all requests
+* Service A – Fast processing service
+* Service B – Slow service with failure simulation
+* Span Collector – Stores and manages trace data
+* Frontend UI – Visualizes traces (Jaeger-like UI)
+* Prometheus – Metrics collection and monitoring
+
 ---
 
-## Features
+## Architecture
 
- Distributed tracing using W3C traceparent header
- Parallel service calls (Service A & B)
- Error simulation (Service B fails randomly)
- Span collection & storage
- Trace visualization (timeline / flame graph)
- Prometheus metrics ("/metrics")
- Docker-based orchestration
- Health checks for all services
+```
+Frontend (5000)
+      │
+      ▼
+Gateway (3000)
+      │
+ ┌────┴────┐
+ ▼         ▼
+Service A  Service B
+(3001)     (3002)
+      │
+      ▼
+Collector (4000)
+      │
+      ▼
+Prometheus (9090)
+```
+
+---
+
+## Key Features
+
+* Distributed tracing using W3C `traceparent` header
+* Parallel service calls (Service A and Service B)
+* Failure simulation (Service B – 20% error rate)
+* Centralized span collection
+* Trace visualization (timeline / flame graph)
+* Prometheus metrics (`/metrics`)
+* Docker-based deployment
+* Health checks for all services
 
 ---
 
@@ -66,129 +62,154 @@ The system includes:
 
 ### Gateway
 
+```
 POST /api/go
+```
 
-- Starts a new trace
-- Calls Service A & B
-- Returns "{ "status": "ok" }"
+* Starts a new trace
+* Calls Service A and Service B
+* Returns:
+
+```json
+{ "status": "ok" }
+```
 
 ---
 
 ### Service A
 
+```
 POST /work
+```
 
-- Delay: 50–200 ms
-- Always success
+* Delay: 50–200 ms
+* Always successful
 
 ---
 
 ### Service B
 
+```
 POST /work
+```
 
-- Delay: 100–500 ms
-- 20% failure rate
+* Delay: 100–500 ms
+* 20% failure rate
 
 ---
 
 ### Collector
+
 ```
 POST /api/spans
 GET  /api/traces
 GET  /api/traces/{traceId}
 ```
+
 ---
 
 ### Metrics
 
+```
 GET /metrics
+```
 
 Available on:
 
-- Gateway
-- Service A
-- Service B
+* Gateway
+* Service A
+* Service B
 
----
+Example:
 
-### Example Metrics
-
+```
 http_requests_total{service="gateway",method="POST",path="/api/go",status="200"} 5
-
-http_request_duration_seconds_bucket{service="gateway",le="0.5"} 3
+```
 
 ---
 
-### Frontend Features
+## Frontend Features
 
-- Trace list view
-- Clickable trace IDs
-- Timeline visualization
-- Error spans shown in red
-- data-testid attributes for testing
+* Trace list view
+* Clickable trace IDs
+* Timeline visualization
+* Error spans highlighted in red
+* data-testid support for testing
 
 ---
 
 ## Running the Project
 
-1️ Clone repository
-```
-git clone <your-repo-url>
-```
-```
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/Laharisrikotipalli/distributed-tracing-system.git
 cd distributed-tracing-system
 ```
 
 ---
 
-2️ Start services
-```
+### 2. Start Services
+
+```bash
 docker compose up --build
 ```
+
 ---
 
-3️ Access applications
-```
-Service| URL
-Frontend| http://localhost:5000
-Gateway| http://localhost:3005
-Collector| http://localhost:4000
-Prometheus| http://localhost:9090
-```
+### 3. Access Applications
+
+| Service    | URL                   |
+| ---------- | --------------------- |
+| Frontend   | http://localhost:5000 |
+| Gateway    | http://localhost:3000 |
+| Collector  | http://localhost:4000 |
+| Prometheus | http://localhost:9090 |
+
 ---
 
-### Testing
+## Testing
 
-Generate trace
+### Generate Trace
+
+```bash
+curl -X POST http://localhost:3000/api/go
 ```
-curl -X POST http://localhost:3010/api/go
-```
+
 ---
 
-Get traces
-```
+### Get All Traces
+
+```bash
 curl http://localhost:4000/api/traces
 ```
+
 ---
 
-Metrics
+### Metrics
+
+```bash
+curl http://localhost:3000/metrics
 ```
-curl http://localhost:3010/metrics
-```
+
 ---
 
-## Traceparent Format
+## Trace Format
 
+```
 00-{traceId}-{spanId}-01
+```
 
 Example:
+
 ```
 00-abc123def4567890-xyz987654321-01
 ```
+
 ---
 
 ## Project Structure
+
 ```
 distributed-tracing-system/
 │
@@ -206,10 +227,34 @@ distributed-tracing-system/
 
 ---
 
+## Learning Outcomes
+
+* Microservices communication
+* Distributed tracing concepts
+* Observability (tracing and metrics)
+* Docker-based system design
+* Monitoring using Prometheus
+
+---
+
+## Future Improvements
+
+* Integrate Jaeger or Zipkin
+* Add persistent storage (MongoDB/PostgreSQL)
+* Add authentication and security
+* Deploy on AWS (EC2 with Docker)
+* Add Grafana dashboards
+
+---
+
 ## Conclusion
 
-This project demonstrates a complete distributed tracing system with:
+This project demonstrates a complete observability pipeline by combining:
 
-- Observability
-- Monitoring
-- Visualization
+* Tracing for request flow tracking
+* Monitoring for metrics collection
+* Visualization through a user interface
+
+It serves as a practical implementation of modern cloud-native system design.
+
+---
